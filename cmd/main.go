@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func main() {
@@ -29,7 +30,16 @@ func main() {
 	})
 
 	server.POST("add", func(ctx *gin.Context) {
-
+		var inputData map[string]interface{}
+		ctx.ShouldBindJSON(inputData)
+		object := bson.M(inputData)
+		println(object)
+		result, err := internal.InsertObject(&object, client, &context)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusCreated, result)
 	})
 
 	server.DELETE(":id", func(ctx *gin.Context) {

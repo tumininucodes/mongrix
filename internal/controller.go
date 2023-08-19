@@ -60,7 +60,6 @@ func GetObjects(client *mongo.Client, ctx *context.Context) (*bson.A, error) {
 			fmt.Println("Error decoding documents: ", err)
 			return nil, err
 		}
-		fmt.Println("result -> ", result)
 		results = append(results, result)
 	}
 
