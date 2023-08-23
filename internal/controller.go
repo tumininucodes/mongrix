@@ -81,7 +81,10 @@ func InsertObject(object *bson.M, client *mongo.Client, ctx *context.Context) (b
 		return nil, err
 	}
 
+	println("last insert id: ", result.InsertedID)
+	
 	var inserted bson.M
-	collection.FindOne(*ctx, result.InsertedID).Decode(&inserted)
+	collection.FindOne(*ctx, bson.M{"_id": result.InsertedID}).Decode(&inserted)
+	println("inserted: ", inserted)
 	return inserted, nil
 }
