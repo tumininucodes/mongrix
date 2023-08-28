@@ -83,13 +83,14 @@ func InsertObject(object *bson.M, db *mongo.Database, ctx *context.Context) (bso
 	}
 	var inserted bson.M
 	collection.FindOne(*ctx, bson.M{"_id": result.InsertedID}).Decode(&inserted)
+	println("inserted id -> ", result.InsertedID)
 	return inserted, nil
 }
 
 
 func UpdateObject(id primitive.ObjectID, db *mongo.Database, ctx *context.Context) (bson.M, error) {
 	filter := bson.D{{Key: "_id", Value: id}}
-	result, err := db.Collection("Todo").UpdateOne(*ctx, filter, bson.D{
+	_, err := db.Collection("Todo").UpdateOne(*ctx, filter, bson.D{
         {Key: "$set", Value: bson.D{
             {Key: "field_to_update", Value: "new_value"},
         }},
@@ -98,7 +99,9 @@ func UpdateObject(id primitive.ObjectID, db *mongo.Database, ctx *context.Contex
 		return nil, err
 	}
 	var upserted bson.M
-	db.Collection("Todo").FindOne(*ctx, bson.M{"_id": result.UpsertedID}).Decode(&upserted)
+	db.Collection("Todo").FindOne(*ctx, bson.M{"_id": id}).Decode(&upserted)
+	println("upserted -> ", upserted)
+	println("upsertedId -> ", id.Hex())
 	return upserted, nil
 }
 
