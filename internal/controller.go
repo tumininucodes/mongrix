@@ -88,23 +88,17 @@ func InsertObject(object *bson.M, db *mongo.Database, ctx *context.Context) (bso
 }
 
 
-func UpdateObject(id primitive.ObjectID, db *mongo.Database, ctx *context.Context) (bson.M, error) {
+func UpdateObject(id primitive.ObjectID, db *mongo.Database, ctx *context.Context, data *map[string]interface{}) (bson.M, error) {
 	filter := bson.D{{Key: "_id", Value: id}}
-	_, err := db.Collection("Todo").UpdateOne(*ctx, filter, bson.D{
-        {Key: "$set", Value: bson.D{
-            {Key: "field_to_update", Value: "new_value"},
-        }},
-    })
+	_, err := db.Collection("Todo").UpdateOne(*ctx, filter, data)
 	if err != nil {
 		return nil, err
 	}
 	var upserted bson.M
+	println("data -> ", data)
 	db.Collection("Todo").FindOne(*ctx, bson.M{"_id": id}).Decode(&upserted)
-	println("upserted -> ", upserted)
-	println("upsertedId -> ", id.Hex())
 	return upserted, nil
 }
-
 
 func DeleteObject() {
 	
