@@ -88,7 +88,7 @@ func InsertObject(object *bson.M, db *mongo.Database, ctx *context.Context) (bso
 
 
 func UpdateObject(id primitive.ObjectID, db *mongo.Database, ctx *context.Context) (bson.M, error) {
-	filter := bson.D{{"_id", id}}
+	filter := bson.D{{Key: "_id", Value: id}}
 	result, err := db.Collection("Todo").UpdateOne(*ctx, filter, bson.D{
         {Key: "$set", Value: bson.D{
             {Key: "field_to_update", Value: "new_value"},
