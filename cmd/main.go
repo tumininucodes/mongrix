@@ -20,6 +20,8 @@ func main() {
 		panic(err.Error())
 	}
 
+	db := client.Database("Todo")
+
 	server.GET("objects", func(ctx *gin.Context) {
 		results, err := internal.GetObjects(client, &context)
 		if err != nil {
@@ -39,12 +41,7 @@ func main() {
 
 		bsonObject := bson.M(inputData)
 		
-		// if err := bson.UnmarshalExtJSON([]byte(inputData), false, &bsonData); err != nil {
-		// 	fmt.Println("Error converting JSON to BSON:", err)
-		// 	return
-		// }
-
-		result, err := internal.InsertObject(&bsonObject, client, &context)
+		result, err := internal.InsertObject(&bsonObject, db, &context)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return

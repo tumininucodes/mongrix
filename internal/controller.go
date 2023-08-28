@@ -7,6 +7,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -74,8 +75,8 @@ func GetObjects(client *mongo.Client, ctx *context.Context) (*bson.A, error) {
 }
 
 
-func InsertObject(object *bson.M, client *mongo.Client, ctx *context.Context) (bson.M, error) {
-	collection := client.Database("todo").Collection("Todo")
+func InsertObject(object *bson.M, db *mongo.Database, ctx *context.Context) (bson.M, error) {
+	collection := db.Collection("Todo")
 	result, err := collection.InsertOne(*ctx, object)
 	if err != nil {
 		return nil, err
@@ -85,8 +86,20 @@ func InsertObject(object *bson.M, client *mongo.Client, ctx *context.Context) (b
 	return inserted, nil
 }
 
-func UpdateObject() {
 
+func UpdateObject(id primitive.ObjectID, db *mongo.Database, ctx *context.Context) (bson.M, error) {
+	filter := bson.D{{"_id", id}}
+	result, err := db.Collection("Todo").UpdateOne(*ctx, filter, bson.D{
+        {Key: "$set", Value: bson.D{
+            {Key: "field_to_update", Value: "new_value"},
+        }},
+    })
+	if err != nil {
+		return nil, err
+	}
+	var upserted bson.M
+	db.Collection("Todo").FindOne(*ctx, bson.M{"_id": result.UpsertedID}).Decode(&upserted)
+	return upserted, nil
 }
 
 
