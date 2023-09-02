@@ -90,7 +90,7 @@ func InsertObject(object *bson.M, db *mongo.Database, ctx *context.Context) (bso
 
 func UpdateObject(id primitive.ObjectID, db *mongo.Database, ctx *context.Context, data *map[string]interface{}) (bson.M, error) {
 	filter := bson.D{{Key: "_id", Value: id}}
-	update := bson.D{{"$set", bson.D{{"avg_rating", 4.4}}}}
+	update := bson.D{{Key: "$set", Value: bson.D{{"avg_rating", 4.4}}}}
 	_, err := db.Collection("Todo").UpdateOne(*ctx, filter, update)
 	if err != nil {
 		return nil, err
