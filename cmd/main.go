@@ -63,7 +63,7 @@ func main() {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		result, err := internal.UpdateObject(mongoId, db, &context, &updateData)
+		result, err := internal.UpdateObject(&mongoId, db, &context, &updateData)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -72,7 +72,20 @@ func main() {
 	})
 
 	server.DELETE(":id", func(ctx *gin.Context) {
+		idString := ctx.Param("id")
+		id, err := primitive.ObjectIDFromHex(idString)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 
+		deleted, err := internal.DeleteObject(&id, db, &context)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{"deleted": deleted})
 	})
 
 

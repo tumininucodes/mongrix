@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -88,8 +87,10 @@ func InsertObject(object *bson.M, db *mongo.Database, ctx *context.Context) (bso
 }
 
 
-func UpdateObject(id primitive.ObjectID, db *mongo.Database, ctx *context.Context, data *map[string]interface{}) (bson.M, error) {
-	filter := bson.D{{Key: "_id", Value: id}}
+func UpdateObject(id *primitive.ObjectID, db *mongo.Database, ctx *context.Context, data *map[string]interface{}) (bson.M, error) {
+	filter := bson.M{
+		"_id": id,
+	}
 	update := bson.M{
 		"$set": data,
 	}
@@ -98,11 +99,17 @@ func UpdateObject(id primitive.ObjectID, db *mongo.Database, ctx *context.Contex
 		return nil, err
 	}
 	var upserted bson.M
-	println("data -> ", data)
 	db.Collection("Todo").FindOne(*ctx, bson.M{"_id": id}).Decode(&upserted)
 	return upserted, nil
 }
 
-func DeleteObject() {
-	
+func DeleteObject(id *primitive.ObjectID, db *mongo.Database, ctx *context.Context) (bool, error) {
+	filter := bson.M{
+		"_id": id,
+	}
+	_, err := db.Collection("todo").DeleteOne(*ctx, filter)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
