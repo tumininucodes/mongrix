@@ -31,6 +31,7 @@ func main() {
 		}
 		ctx.JSON(http.StatusOK, results)
 	})
+	
 
 	server.POST("add", func(ctx *gin.Context) {
 		var inputData map[string]interface{}
@@ -47,6 +48,7 @@ func main() {
 		}
 		ctx.JSON(http.StatusCreated, result)
 	})
+
 
 	server.PATCH(":id", func(ctx *gin.Context) {
 		idString := ctx.Param("id")
@@ -70,6 +72,7 @@ func main() {
 		ctx.JSON(http.StatusOK, result)
 	})
 
+
 	server.DELETE(":id", func(ctx *gin.Context) {
 		idString := ctx.Param("id")
 		id, err := primitive.ObjectIDFromHex(idString)
@@ -77,13 +80,11 @@ func main() {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-
 		deleted, err := internal.DeleteObject(&id, coll, &context)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-
 		ctx.JSON(http.StatusOK, gin.H{"deleted": deleted})
 	})
 

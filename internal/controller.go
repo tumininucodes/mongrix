@@ -2,8 +2,10 @@ package internal
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
+
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -72,7 +74,7 @@ func GetObjects(coll *mongo.Collection, ctx *context.Context) (*bson.A, error) {
 }
 
 
-func InsertObject(object *bson.M, coll *mongo.Collection, ctx *context.Context) (bson.M, error) {
+func InsertObject(object *bson.M, coll *mongo.Collection, ctx *context.Context) (*bson.M, error) {
 	result, err := coll.InsertOne(*ctx, object)
 	if err != nil {
 		return nil, err
@@ -80,11 +82,11 @@ func InsertObject(object *bson.M, coll *mongo.Collection, ctx *context.Context) 
 	var inserted bson.M
 	coll.FindOne(*ctx, bson.M{"_id": result.InsertedID}).Decode(&inserted)
 	println("inserted id -> ", result.InsertedID)
-	return inserted, nil
+	return &inserted, nil
 }
 
 
-func UpdateObject(id *primitive.ObjectID, coll *mongo.Collection, ctx *context.Context, data *map[string]interface{}) (bson.M, error) {
+func UpdateObject(id *primitive.ObjectID, coll *mongo.Collection, ctx *context.Context, data *map[string]interface{}) (*bson.M, error) {
 	filter := bson.M{
 		"_id": id,
 	}
@@ -97,7 +99,28 @@ func UpdateObject(id *primitive.ObjectID, coll *mongo.Collection, ctx *context.C
 	}
 	var upserted bson.M
 	coll.FindOne(*ctx, bson.M{"_id": id}).Decode(&upserted)
-	return upserted, nil
+	return &upserted, nil
+}
+
+func ReplaceObject(id *primitive.ObjectID, coll *mongo.Collection, ctx *context.Context, data *map[string]interface{}) (*bson.M, error) {
+	filter := bson.M{
+		"_id": id,
+	}
+	replacement := bson.M{
+		"_id": id,
+		"data": data,
+	}
+	
+	result, err := coll.ReplaceOne(*ctx, filter, replacement)
+	if err != nil {
+		return nil, err
+	}
+
+	if result.ModifiedCount > 0 {
+		return &replacement, nil
+	} else {
+		return nil, errors.New("error replacing object")
+	}
 }
 
 func DeleteObject(id *primitive.ObjectID, coll *mongo.Collection, ctx *context.Context) (bool, error) {
