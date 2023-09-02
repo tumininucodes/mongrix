@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -108,7 +107,10 @@ func ReplaceObject(id *primitive.ObjectID, coll *mongo.Collection, ctx *context.
 	}
 	replacement := bson.M{
 		"_id": id,
-		"data": data,
+	}
+
+	for k, v := range *data {
+		replacement[k] = v
 	}
 	
 	result, err := coll.ReplaceOne(*ctx, filter, replacement)

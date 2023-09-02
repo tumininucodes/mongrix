@@ -31,7 +31,7 @@ func main() {
 		}
 		ctx.JSON(http.StatusOK, results)
 	})
-	
+
 
 	server.POST("add", func(ctx *gin.Context) {
 		var inputData map[string]interface{}
@@ -90,7 +90,25 @@ func main() {
 
 
 	server.PUT(":id", func(ctx *gin.Context) {
+		idString := ctx.Param("id")
+		id, err := primitive.ObjectIDFromHex(idString)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 
+		var data map[string]interface{}
+		if err := ctx.ShouldBindJSON(&data); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		result, err := internal.ReplaceObject(&id, coll, &context, &data)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusOK, result)
 	})
 
 	server.Run(":8080")
