@@ -20,11 +20,11 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
+	coll := client.Database("todo").Collection("Todo")
 
-	db := client.Database("todo")
 
 	server.GET("objects", func(ctx *gin.Context) {
-		results, err := internal.GetObjects(client, &context)
+		results, err := internal.GetObjects(coll, &context)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -38,10 +38,9 @@ func main() {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON data"})
 			return
 		}
-
 		bsonObject := bson.M(inputData)
 
-		result, err := internal.InsertObject(&bsonObject, db, &context)
+		result, err := internal.InsertObject(&bsonObject, coll, &context)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -63,7 +62,7 @@ func main() {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		result, err := internal.UpdateObject(&mongoId, db, &context, &updateData)
+		result, err := internal.UpdateObject(&mongoId, coll, &context, &updateData)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -79,7 +78,7 @@ func main() {
 			return
 		}
 
-		deleted, err := internal.DeleteObject(&id, db, &context)
+		deleted, err := internal.DeleteObject(&id, coll, &context)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return

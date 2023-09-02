@@ -44,10 +44,8 @@ func ConnectToMongoDB(ctx *context.Context) (*mongo.Client, error) {
 	return client, nil
 }
 
-func GetObjects(client *mongo.Client, ctx *context.Context) (*bson.A, error) {
-	collection := client.Database("todo").Collection("Todo")
-
-	cursor, err := collection.Find(*ctx, bson.M{})
+func GetObjects(coll *mongo.Collection, ctx *context.Context) (*bson.A, error) {
+	cursor, err := coll.Find(*ctx, bson.M{})
 	if err != nil {
 		fmt.Println("Error querying collection:", err)
 		return nil, err
@@ -74,42 +72,47 @@ func GetObjects(client *mongo.Client, ctx *context.Context) (*bson.A, error) {
 }
 
 
-func InsertObject(object *bson.M, db *mongo.Database, ctx *context.Context) (bson.M, error) {
-	collection := db.Collection("Todo")
-	result, err := collection.InsertOne(*ctx, object)
+func InsertObject(object *bson.M, coll *mongo.Collection, ctx *context.Context) (bson.M, error) {
+	result, err := coll.InsertOne(*ctx, object)
 	if err != nil {
 		return nil, err
 	}
 	var inserted bson.M
-	collection.FindOne(*ctx, bson.M{"_id": result.InsertedID}).Decode(&inserted)
+	coll.FindOne(*ctx, bson.M{"_id": result.InsertedID}).Decode(&inserted)
 	println("inserted id -> ", result.InsertedID)
 	return inserted, nil
 }
 
 
-func UpdateObject(id *primitive.ObjectID, db *mongo.Database, ctx *context.Context, data *map[string]interface{}) (bson.M, error) {
+func UpdateObject(id *primitive.ObjectID, coll *mongo.Collection, ctx *context.Context, data *map[string]interface{}) (bson.M, error) {
 	filter := bson.M{
 		"_id": id,
 	}
 	update := bson.M{
 		"$set": data,
 	}
-	_, err := db.Collection("Todo").UpdateOne(*ctx, filter, update)
+	_, err := coll.UpdateOne(*ctx, filter, update)
 	if err != nil {
 		return nil, err
 	}
 	var upserted bson.M
-	db.Collection("Todo").FindOne(*ctx, bson.M{"_id": id}).Decode(&upserted)
+	coll.FindOne(*ctx, bson.M{"_id": id}).Decode(&upserted)
 	return upserted, nil
 }
 
-func DeleteObject(id *primitive.ObjectID, db *mongo.Database, ctx *context.Context) (bool, error) {
+func DeleteObject(id *primitive.ObjectID, coll *mongo.Collection, ctx *context.Context) (bool, error) {
 	filter := bson.M{
 		"_id": id,
 	}
-	_, err := db.Collection("todo").DeleteOne(*ctx, filter)
+	result, err := coll.DeleteOne(*ctx, filter)
 	if err != nil {
+		println("error deleting ->", err.Error())
 		return false, err
 	}
-	return true, nil
+	if result.DeletedCount > 0 {
+		return true, nil
+	} else {
+		return false, nil
+	}
+	
 }
