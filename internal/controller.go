@@ -80,7 +80,7 @@ func InsertObject(object *bson.M, coll *mongo.Collection, ctx *context.Context) 
 	}
 	var inserted bson.M
 	coll.FindOne(*ctx, bson.M{"_id": result.InsertedID}).Decode(&inserted)
-	println("inserted id -> ", result.InsertedID)
+	fmt.Println("inserted result -> ", *result)
 	return &inserted, nil
 }
 
