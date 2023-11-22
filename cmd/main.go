@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"mongrix/internal"
 	"net/http"
-
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -14,6 +14,9 @@ func main() {
 
 	server := gin.Default()
 
+	server.Use(responseModifierMiddleware)
+
+	
 	context := context.Background()
 
 	client, err := internal.ConnectToMongoDB(&context)
@@ -34,14 +37,16 @@ func main() {
 
 
 	server.POST("add", func(ctx *gin.Context) {
-		var inputData map[string]interface{}
-		if err := ctx.ShouldBindJSON(&inputData); err != nil {
+		// var inputData map[string]interface{}
+
+		var todo internal.Todo
+
+		if err := ctx.ShouldBindJSON(&todo); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON data"})
 			return
 		}
-		bsonObject := bson.M(inputData)
 
-		result, err := internal.InsertObject(&bsonObject, coll, &context)
+		result, err := internal.InsertObject(todo, coll, &context)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -111,6 +116,58 @@ func main() {
 		ctx.JSON(http.StatusOK, result)
 	})
 
-	server.Run(":8080")
+	
 
+	server.Run(":8081")
+
+}
+
+
+
+func responseModifierMiddleware(ctx *gin.Context) {
+
+	blw := &interceptResponseWriter{ctx.Writer, []byte{}, ctx.Writer.Status()}
+    ctx.Writer = blw
+    ctx.Next()
+
+	var objects []map[string]interface{}
+
+	if err := json.Unmarshal(blw.body, &objects); err != nil {
+		fmt.Println("Error1:", err.Error())
+		return
+	}
+
+	fmt.Println("objects ", objects)
+
+	for _, obj := range objects {
+		if name, ok := obj["name"].(string); ok {
+			obj["name"] = "The " + name
+		}
+	}
+
+	modifiedJSON, err := json.Marshal(objects)
+	if err != nil {
+		fmt.Println("Error2:", err)
+		return
+	}
+
+	blw.body = modifiedJSON
+
+	ctx.Writer.WriteString(string(blw.body))
+
+}
+
+type interceptResponseWriter struct {
+    gin.ResponseWriter
+    body   []byte
+    status int
+}
+
+
+func (w *interceptResponseWriter) Write(b []byte) (int, error) {
+	if w.status == 0 {
+		w.status = http.StatusOK
+	}
+	w.body = append(w.body, b...)
+	return len(b), nil
 }

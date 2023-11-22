@@ -73,7 +73,7 @@ func GetObjects(coll *mongo.Collection, ctx *context.Context) (*bson.A, error) {
 }
 
 
-func InsertObject(object *bson.M, coll *mongo.Collection, ctx *context.Context) (*bson.M, error) {
+func InsertObject(object interface{}, coll *mongo.Collection, ctx *context.Context) (*bson.M, error) {
 	result, err := coll.InsertOne(*ctx, object)
 	if err != nil {
 		return nil, err
